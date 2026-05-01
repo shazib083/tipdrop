@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
         name,
         username,
         email,
-        (passwordHash as any): passwordHash,
+        passwordHash: passwordHash as any,
         profile: {
           create: {
             displayName: name,
