@@ -1,0 +1,203 @@
+// prisma/schema.prisma
+// TipDrop — Full Database Schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─── Auth ───────────────────────────────────────────────────
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─── Core User ──────────────────────────────────────────────
+model User {
+  id            String    @id @default(cuid())
+  email         String?   @unique
+  emailVerified DateTime?
+  name          String?
+  image         String?
+  username      String?   @unique
+  bio           String?   @db.Text
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Wallet
+  walletAddress     String?  @unique
+  circleWalletId    String?
+  circleWalletSetId String?
+
+  // Profile settings
+  isPublic          Boolean  @default(true)
+  acceptingTips     Boolean  @default(true)
+  defaultToken      String   @default("USDC")
+  minTipAmount      Float    @default(0.1)
+
+  // Stats (denormalised for speed)
+  totalReceived     Float    @default(0)
+  totalTips         Int      @default(0)
+
+  // Relations
+  accounts          Account[]
+  sessions          Session[]
+  socialLinks       SocialLink[]
+  tipsReceived      Tip[]        @relation("TipReceiver")
+  tipsSent          Tip[]        @relation("TipSender")
+  profile           Profile?
+
+  @@index([username])
+  @@index([walletAddress])
+}
+
+model Profile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  coverColor      String   @default("#0066FF")
+  avatarBg        String   @default("#00FF94")
+  displayName     String?
+  location        String?
+  website         String?
+  twitterHandle   String?
+  githubHandle    String?
+  telegramHandle  String?
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SocialLink {
+  id        String   @id @default(cuid())
+  userId    String
+  platform  Platform
+  handle    String
+  url       String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, platform])
+}
+
+enum Platform {
+  TWITTER
+  GITHUB
+  TELEGRAM
+  DISCORD
+  YOUTUBE
+  INSTAGRAM
+  WEBSITE
+  LINKEDIN
+}
+
+// ─── Tips / Transactions ────────────────────────────────────
+model Tip {
+  id              String      @id @default(cuid())
+  amount          Float
+  token           String      @default("USDC")
+  message         String?     @db.Text
+  isAnonymous     Boolean     @default(false)
+  status          TipStatus   @default(PENDING)
+
+  // Parties
+  senderId        String?
+  receiverId      String
+
+  // Blockchain
+  txHash          String?     @unique
+  blockNumber     BigInt?
+  networkId       Int?
+  fromAddress     String?
+  toAddress       String?
+
+  // Circle
+  circlePaymentId String?     @unique
+  circleTransferId String?    @unique
+
+  // Arc nanopayment
+  arcPaymentId    String?     @unique
+  arcBatchId      String?
+
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  confirmedAt     DateTime?
+
+  sender          User?       @relation("TipSender",   fields: [senderId],   references: [id])
+  receiver        User        @relation("TipReceiver", fields: [receiverId], references: [id])
+
+  @@index([receiverId])
+  @@index([senderId])
+  @@index([txHash])
+  @@index([status])
+  @@index([createdAt])
+}
+
+enum TipStatus {
+  PENDING
+  PROCESSING
+  CONFIRMED
+  FAILED
+  REFUNDED
+}
+
+// ─── Nanopayment Batches (Arc) ───────────────────────────────
+model NanopaymentBatch {
+  id          String   @id @default(cuid())
+  batchId     String   @unique
+  totalAmount Float
+  tipCount    Int
+  settled     Boolean  @default(false)
+  settledAt   DateTime?
+  txHash      String?
+  createdAt   DateTime @default(now())
+}
+
+// ─── Tip Links ───────────────────────────────────────────────
+model TipLink {
+  id            String   @id @default(cuid())
+  slug          String   @unique
+  userId        String
+  presetAmount  Float?
+  token         String   @default("USDC")
+  message       String?
+  clickCount    Int      @default(0)
+  tipCount      Int      @default(0)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  expiresAt     DateTime?
+}
