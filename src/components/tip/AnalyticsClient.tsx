@@ -129,7 +129,7 @@ export function AnalyticsClient({ dailyData, tokenData, totalTips, totalAmount }
                     cx="50%"
                     cy="50%"
                     outerRadius={70}
-                    label={({ token, percent }) => `${token} ${(percent * 100).toFixed(0)}%`}
+                    label={({ payload, percent }) => `${payload?.token} ${(percent * 100).toFixed(0)}%`}
                     labelLine={false}
                   >
                     {tokenData.map((_, i) => (
