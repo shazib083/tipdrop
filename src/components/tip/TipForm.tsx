@@ -109,8 +109,8 @@ export function TipForm({ receiverId, receiverName, presetAmount }: Props) {
 
       // If we have a contract address to call (USDC transfer on Arc)
       if (data.data?.toAddress && data.data?.usdcContract) {
-        const { ethers } = await import("ethers");
-        const provider = new ethers.BrowserProvider(window.ethereum as unknown as ethers.Eip1193Provider);
+        const ethers = await import("ethers");
+        const provider = new ethers.BrowserProvider(window.ethereum);
         const signer = await provider.getSigner();
 
         const ERC20_ABI = [
