@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@circle-fin/circle-sdk": "^2.4.0",
+    "@circle-fin/developer-controlled-wallets": "^10.3.1",
     "@headlessui/react": "^1.7.17",
     "@hookform/resolvers": "^3.3.4",
     "@metamask/detect-provider": "^2.0.0",
@@ -73,5 +74,19 @@
     "tailwindcss": "^3.4.1",
     "tsx": "^4.7.1",
     "typescript": "^5.4.2"
-  }
+  },
+  "description": "**A production-ready Web3 social tipping platform built with Next.js, Circle SDK, and Arc Testnet.**",
+  "main": "next.config.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shazib083/tipdrop.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/shazib083/tipdrop/issues"
+  },
+  "homepage": "https://github.com/shazib083/tipdrop#readme"
 }
